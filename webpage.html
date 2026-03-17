@@ -209,7 +209,9 @@ let dates           = null;
 let chartInstance   = null;
 
 // ─── Date helpers ──────────────────────────────────────────────────────────────
-function fmt(d) { return d.toISOString().slice(0,10); }
+function fmt(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 function dayLabel(s) {
   const d = new Date(s + "T12:00:00Z");
