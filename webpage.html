@@ -227,11 +227,17 @@ function buildDates() {
 }
 
 // ─── Open-Meteo fetch ──────────────────────────────────────────────────────────
-async function fetchMeteo(lat, lon, startDate, endDate, forecast=false) {
-  const base = forecast
-    ? "https://api.open-meteo.com/v1/forecast"
-    : "https://archive-api.open-meteo.com/v1/archive";
-  const url = `${base}?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&start_date=${startDate}&end_date=${endDate}`;
+// Uses forecast API with past_days for recent data (no archive lag).
+// Archive API is only used for last-year YoY data.
+async function fetchForecastWithPast(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&past_days=7&forecast_days=7`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+  return (await r.json()).daily;
+}
+
+async function fetchArchive(lat, lon, startDate, endDate) {
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&start_date=${startDate}&end_date=${endDate}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
   return (await r.json()).daily;
@@ -239,23 +245,34 @@ async function fetchMeteo(lat, lon, startDate, endDate, forecast=false) {
 
 async function loadAllData() {
   dates = buildDates();
-  const { past7Start, past7End, fcst7End, ly25Start, ly25End, today } = dates;
+  const { past7Start, past7End, ly25Start, ly25End, today } = dates;
+  const todayStr = fmt(today);
   const result = {};
   await Promise.all(CITIES.map(async city => {
-    const [hist, fcst, lastYr] = await Promise.all([
-      fetchMeteo(city.lat, city.lon, fmt(past7Start), fmt(past7End)),
-      fetchMeteo(city.lat, city.lon, fmt(today),      fmt(fcst7End), true),
-      fetchMeteo(city.lat, city.lon, fmt(ly25Start),  fmt(ly25End)),
+    const [combined, lastYr] = await Promise.all([
+      fetchForecastWithPast(city.lat, city.lon),
+      fetchArchive(city.lat, city.lon, fmt(ly25Start), fmt(ly25End)),
     ]);
     const round = v => Math.round(v * 10) / 10;
     result[city.id] = {
-      trend: [
-        ...hist.time.map((t,i) => ({ day:dayLabel(t), hi:round(hist.temperature_2m_max[i]), lo:round(hist.temperature_2m_min[i]), type:"actual" })),
-        ...fcst.time.map((t,i) => ({ day:dayLabel(t), hi:round(fcst.temperature_2m_max[i]), lo:round(fcst.temperature_2m_min[i]), type:"forecast" })),
-      ],
+      trend: combined.time.map((t, i) => ({
+        day:  dayLabel(t),
+        hi:   round(combined.temperature_2m_max[i]),
+        lo:   round(combined.temperature_2m_min[i]),
+        type: t < todayStr ? "actual" : "forecast",
+      })),
       yoy: {
-        thisYear: hist.time.map((t,i) => ({ day:dayLabel(t), hi:round(hist.temperature_2m_max[i]), lo:round(hist.temperature_2m_min[i]) })),
-        lastYear: lastYr.time.map((t,i) => ({ day:dayLabel(t), hi:round(lastYr.temperature_2m_max[i]), lo:round(lastYr.temperature_2m_min[i]) })),
+        thisYear: combined.time
+          .filter(t => t >= fmt(past7Start) && t < todayStr)
+          .map((t, i) => {
+            const offset = combined.time.indexOf(t);
+            return { day: dayLabel(t), hi: round(combined.temperature_2m_max[offset]), lo: round(combined.temperature_2m_min[offset]) };
+          }),
+        lastYear: lastYr.time.map((t, i) => ({
+          day: dayLabel(t),
+          hi:  round(lastYr.temperature_2m_max[i]),
+          lo:  round(lastYr.temperature_2m_min[i]),
+        })),
       },
     };
   }));
@@ -425,7 +442,7 @@ function renderForecast() {
   ], `${scopeLabel} · TEMPERATURE °C · SOLID = ACTUAL · DASHED = FORECAST`, dayLabel(fmt(today)));
 
   const loc = currentSelector==="avg" ? "Berlin, Amsterdam & Copenhagen (unweighted avg)" : CITIES.find(c=>c.id===currentSelector).label;
-  document.getElementById("source-text").innerHTML = `<strong>SOURCE</strong>Open-Meteo historical archive & forecast API. Location: ${loc}. Actuals: ${actRange}. Forecast: ${fcstRange}. Forecast values subject to change.`;
+  document.getElementById("source-text").innerHTML = `<strong>SOURCE</strong>Open-Meteo forecast API (past_days). Location: ${loc}. Actuals: ${actRange}. Forecast: ${fcstRange}. Forecast values subject to change.`;
 }
 
 // ─── Render YoY tab ─────────────────────────────────────────────────────────────
@@ -467,7 +484,7 @@ function renderYoY() {
   ], `${scopeLabel} · TEMPERATURE °C · SOLID = ${tyYear} · DASHED = ${lyYear}`, null);
 
   const loc = currentSelector==="avg" ? "Berlin, Amsterdam & Copenhagen (unweighted avg)" : CITIES.find(c=>c.id===currentSelector).label;
-  document.getElementById("source-text").innerHTML = `<strong>SOURCE</strong>Open-Meteo historical archive API. Location: ${loc}. Period: last 7 days vs same 7 days in ${lyYear}.`;
+  document.getElementById("source-text").innerHTML = `<strong>SOURCE</strong>Open-Meteo forecast API (past_days) for current year; archive API for ${lyYear}. Location: ${loc}. Period: last 7 days vs same 7 days in ${lyYear}.`;
 }
 
 
@@ -561,7 +578,7 @@ function renderSummary() {
       </table>
     </div>
     <div class="source">
-      <strong>SOURCE</strong>Open-Meteo historical archive & forecast API.
+      <strong>SOURCE</strong>Open-Meteo forecast API (past_days) for actuals & forecast; archive API for ${lyYear} YoY data.
       Last 7d actuals: ${actRange}. Forecast: ${fcstRange}.
       YoY comparison: same 7 days in ${lyYear}. All values are 7-day averages in °C.
     </div>
