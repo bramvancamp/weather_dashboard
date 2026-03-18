@@ -7,6 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
+    /* Fix 3: responsive horizontal padding via custom property */
+    :root { --px: clamp(16px, 5vw, 40px); }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #F7F5F0;
@@ -20,42 +23,44 @@
     #header {
       background: #fff;
       border-bottom: 1px solid #E2DDD6;
-      padding: 24px 40px 0;
+      padding: 20px var(--px) 0;
       position: sticky; top: 0; z-index: 10;
     }
-    #header h1 { font-size: clamp(20px, 3.5vw, 28px); font-weight: 400; margin: 0; }
+    #header h1 { font-size: clamp(18px, 3.5vw, 28px); font-weight: 400; margin: 0; }
     #header .sub { font-size: 12px; color: #6B6560; margin-top: 4px; }
     #header .eyebrow { font-size: 11px; letter-spacing: .18em; color: #A39E99; margin-bottom: 5px; }
 
     /* ── Tab bar ── */
+    /* Fix 1: flex-wrap so pills fall to a second row on mobile */
     #tabbar {
-      display: flex; align-items: stretch;
+      display: flex; align-items: stretch; flex-wrap: wrap;
       border-bottom: 1px solid #E2DDD6;
-      margin-top: 16px;
+      margin-top: 12px;
     }
     .tab-btn {
-      padding: 10px 24px; border: none; background: transparent;
+      padding: 10px 20px; border: none; background: transparent;
       font-size: 14px; color: #A39E99;
       border-bottom: 2px solid transparent;
       transition: all .15s; margin-bottom: -1px;
+      white-space: nowrap;
     }
     .tab-btn.active { color: #1A1714; border-bottom-color: #1A1714; }
     #tabbar .spacer { flex: 1; }
 
     /* ── Selector pills ── */
-    #pills { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; }
+    #pills { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; flex-wrap: wrap; }
     .pill {
       padding: 5px 14px; border-radius: 20px; font-size: 12px;
       border: 1px solid #E2DDD6; background: transparent; color: #6B6560;
-      transition: all .15s;
+      transition: all .15s; white-space: nowrap;
     }
-    .pill.active-avg    { background:#1A1714; color:#F7F5F0; border-color:#1A1714; }
-    .pill.active-berlin { background:#C0392B; color:#fff; border-color:#C0392B; }
+    .pill.active-avg       { background:#1A1714; color:#F7F5F0; border-color:#1A1714; }
+    .pill.active-berlin    { background:#C0392B; color:#fff; border-color:#C0392B; }
     .pill.active-amsterdam { background:#1A5276; color:#fff; border-color:#1A5276; }
-    .pill.active-copenhagen { background:#117A65; color:#fff; border-color:#117A65; }
+    .pill.active-copenhagen{ background:#117A65; color:#fff; border-color:#117A65; }
 
     /* ── Content ── */
-    #content { padding: 24px 40px 48px; }
+    #content { padding: 20px var(--px) 48px; }
 
     /* ── KPI groups ── */
     .kpi-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
@@ -78,9 +83,20 @@
       border-right: 1px solid #E2DDD6;
     }
     .kpi-card:last-child { border-right: none; }
-    .kpi-label { font-size: 10px; color: #A39E99; letter-spacing: .12em; margin-bottom: 6px; }
-    .kpi-value { font-size: 26px; font-weight: 400; line-height: 1.1; }
-    .kpi-sub   { font-size: 10px; color: #A39E99; margin-top: 4px; }
+    /* Fix 5: dashed top border on forecast cards mirrors the chart's dashed = forecast convention */
+    .kpi-forecast {
+      background: #FAFAF8;
+      border-top: 3px dashed #D0C9C1;
+    }
+    /* Fix 4: labels slightly larger and darker for readability */
+    .kpi-label { font-size: 11px; color: #6B6560; letter-spacing: .12em; margin-bottom: 6px; }
+    /* Fix 10: system sans-serif for numeric KPI values — much more scannable */
+    .kpi-value {
+      font-size: 26px; font-weight: 400; line-height: 1.1;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    /* Fix 4: sub bumped from 10px to 12px and darkened */
+    .kpi-sub { font-size: 12px; color: #6B6560; margin-top: 5px; }
 
     /* ── Chart card ── */
     .chart-card {
@@ -113,21 +129,26 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin-label { font-size: 13px; color: #A39E99; }
 
-
     /* ── Summary table ── */
     .summary-wrap {
       background: #fff; border-radius: 10px; border: 1px solid #E2DDD6;
-      overflow: hidden; margin-bottom: 16px;
+      /* Fix 2: horizontal scroll instead of clipping on mobile */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 16px;
     }
     .summary-table {
       width: 100%; border-collapse: collapse;
       font-size: 13px;
+      /* Fix 10: system sans-serif for table data */
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .summary-table th {
       padding: 10px 16px; text-align: right;
-      font-size: 11px; letter-spacing: .1em; color: #A39E99;
-      border-bottom: 1px solid #E2DDD6;
-      font-weight: 400; white-space: nowrap;
+      font-size: 11px; letter-spacing: .1em; color: #fff;
+      background: #3D3733;
+      border-bottom: 1px solid #3D3733;
+      font-weight: 500; white-space: nowrap;
     }
     .summary-table th:first-child { text-align: left; }
     .summary-table td {
@@ -136,7 +157,8 @@
       color: #1A1714; white-space: nowrap;
       font-size: 14px;
     }
-    .summary-table td:first-child { text-align: left; font-size: 14px; }
+    /* Keep serif font for city names only */
+    .summary-table td:first-child { text-align: left; font-size: 14px; font-family: 'DM Serif Display', serif; }
     .summary-table tr:last-child td { border-bottom: none; font-weight: 600; background: #F7F5F0; }
     .summary-table .section-header td {
       background: #F7F5F0; font-size: 10px; letter-spacing: .1em;
@@ -147,8 +169,35 @@
     .delta-cool { color: #1A5276; }
     .delta-zero { color: #A39E99; }
     .city-flag  { margin-right: 6px; }
-    /* ── Error ── */
+
+    /* ── Error — Fix 8: retry button ── */
     #error-msg { padding: 40px; color: #B03A2E; font-size: 13px; text-align: center; }
+    .retry-btn {
+      display: inline-block; margin-top: 16px; padding: 9px 22px;
+      border: 1px solid #C0392B; background: transparent;
+      color: #C0392B; border-radius: 6px; font-family: inherit;
+      font-size: 13px; cursor: pointer; transition: all .15s;
+    }
+    .retry-btn:hover { background: #C0392B; color: #fff; }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      /* Fix 9: compact header — hide decorative eyebrow, tighten spacing */
+      #header .eyebrow { display: none; }
+      #header { padding-top: 12px; }
+      #header .sub { font-size: 11px; }
+      /* Fix 1: pills drop to second row */
+      #tabbar .spacer { display: none; }
+      #pills {
+        width: 100%;
+        padding: 8px 0 10px;
+        border-top: 1px solid #EDE9E3;
+        order: 10;
+      }
+      .tab-btn { padding: 10px 12px; font-size: 13px; }
+      /* Shorter chart on mobile so it fits without scrolling */
+      .chart-wrap { height: 220px; }
+    }
   </style>
 </head>
 <body>
@@ -160,9 +209,9 @@
   <div class="sub" id="date-sub">Loading…</div>
 
   <div id="tabbar">
-    <button class="tab-btn active" data-tab="summary" onclick="switchTab('summary')">Summary</button>
-    <button class="tab-btn" data-tab="forecast" onclick="switchTab('forecast')">Last 7d + Forecast</button>
-    <button class="tab-btn" data-tab="yoy" onclick="switchTab('yoy')" id="yoy-tab-btn">YoY Comparison</button>
+    <button class="tab-btn active" data-tab="summary"  onclick="switchTab('summary')">Summary</button>
+    <button class="tab-btn"        data-tab="forecast" onclick="switchTab('forecast')">Last 7d + Forecast</button>
+    <button class="tab-btn"        data-tab="yoy"      onclick="switchTab('yoy')" id="yoy-tab-btn">YoY Comparison</button>
     <div class="spacer"></div>
     <div id="pills">
       <button class="pill active-avg" data-sel="avg"        onclick="switchSelector('avg')">Avg</button>
@@ -204,11 +253,13 @@ const C = {
 // ─── State ─────────────────────────────────────────────────────────────────────
 let currentTab      = "summary";
 let currentSelector = "avg";
-let weatherData     = null;   // { cityId: { trend:[], yoy:{thisYear:[], lastYear:[]} } }
+let weatherData     = null;
 let dates           = null;
 let chartInstance   = null;
 
 // ─── Date helpers ──────────────────────────────────────────────────────────────
+// Use local date components — toISOString() converts to UTC and would show
+// the wrong date for users in UTC+1/+2 (exactly our three cities).
 function fmt(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
@@ -266,7 +317,7 @@ async function loadAllData() {
       yoy: {
         thisYear: combined.time
           .filter(t => t >= fmt(past7Start) && t < todayStr)
-          .map((t, i) => {
+          .map(t => {
             const offset = combined.time.indexOf(t);
             return { day: dayLabel(t), hi: round(combined.temperature_2m_max[offset]), lo: round(combined.temperature_2m_min[offset]) };
           }),
@@ -319,8 +370,8 @@ function renderKpis(rows) {
       <div class="kpi-row-label" style="background:${row.color}12">
         <span style="color:${row.color}">${row.label}</span>
       </div>
-      ${row.cards.map((card,i) => `
-        <div class="kpi-card">
+      ${row.cards.map(card => `
+        <div class="kpi-card${card.forecast ? ' kpi-forecast' : ''}">
           <div class="kpi-label">${card.label}</div>
           <div class="kpi-value" style="color:${card.deltaColor || row.color}">${card.value}</div>
           ${card.sub ? `<div class="kpi-sub">${card.sub}</div>` : ""}
@@ -337,7 +388,7 @@ function renderChart(labels, datasets, titleText, todayLabel) {
 
   const ctx = document.getElementById("main-chart").getContext("2d");
 
-  // Draw a subtle "today" vertical line via plugin
+  // Fix 6: more visible "TODAY" badge replacing the near-invisible grey label
   const todayLinePlugin = {
     id: "todayLine",
     afterDraw(chart) {
@@ -350,18 +401,30 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       const { top, bottom } = chart.chartArea;
       const ctx2 = chart.ctx;
       ctx2.save();
-      ctx2.setLineDash([4,4]);
-      ctx2.strokeStyle = "#E2DDD6";
+      // Vertical line — more visible
+      ctx2.setLineDash([4, 4]);
+      ctx2.strokeStyle = "#9E9690";
       ctx2.lineWidth = 1.5;
       ctx2.beginPath(); ctx2.moveTo(x, top); ctx2.lineTo(x, bottom); ctx2.stroke();
       ctx2.setLineDash([]);
-      ctx2.fillStyle = "#A39E99";
-      ctx2.font = "10px 'DM Serif Display', serif";
+      // Pill badge
+      const label = "TODAY";
+      ctx2.font = "bold 10px system-ui, -apple-system, sans-serif";
+      const tw = ctx2.measureText(label).width;
+      const bx = x + 6, by = top + 4, bw = tw + 10, bh = 16;
+      ctx2.fillStyle = "#6B6560";
+      ctx2.beginPath();
+      ctx2.roundRect(bx, by, bw, bh, 3);
+      ctx2.fill();
+      ctx2.fillStyle = "#fff";
       ctx2.textAlign = "left";
-      ctx2.fillText("Today →", x+4, top+12);
+      ctx2.fillText(label, bx + 5, by + 11);
       ctx2.restore();
     }
   };
+
+  // Fix 10: system-ui for chart tick labels (more readable at small sizes)
+  const SANS = "system-ui, -apple-system, sans-serif";
 
   chartInstance = new Chart(ctx, {
     type: "line",
@@ -374,15 +437,15 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       plugins: {
         legend: {
           labels: {
-            font:{ family:"'DM Serif Display', serif", size:12 },
+            font:{ family: SANS, size:12 },
             color:"#6B6560", boxWidth:24, boxHeight:2, useBorderRadius:true, borderRadius:1,
           }
         },
         tooltip: {
           backgroundColor:"#fff", borderColor:"#E2DDD6", borderWidth:1,
           titleColor:"#6B6560", bodyColor:"#1A1714",
-          titleFont:{ family:"'DM Serif Display', serif", size:12 },
-          bodyFont:{ family:"'DM Serif Display', serif", size:13 },
+          titleFont:{ family: SANS, size:12 },
+          bodyFont:{ family: SANS, size:13 },
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}°C` },
           padding:10,
         },
@@ -390,12 +453,12 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       scales: {
         x: {
           grid:{ color:"#EDE9E3" },
-          ticks:{ font:{ family:"'DM Serif Display', serif", size:11 }, color:"#A39E99" },
+          ticks:{ font:{ family: SANS, size:11 }, color:"#A39E99" },
           border:{ display:false },
         },
         y: {
           grid:{ color:"#EDE9E3" },
-          ticks:{ font:{ family:"'DM Serif Display', serif", size:11 }, color:"#A39E99",
+          ticks:{ font:{ family: SANS, size:11 }, color:"#A39E99",
                   callback: v => `${v}°` },
           border:{ display:false },
         },
@@ -417,19 +480,19 @@ function renderForecast() {
 
   renderKpis([
     { label:"HIGH", color:C.high, cards:[
-      { label:"ACTUAL",   value:`${kpi.fActHi}°C`,      sub:actRange  },
-      { label:"FORECAST", value:`${kpi.fFcstHi}°C`,     sub:fcstRange },
-      { label:"Δ",        value:`${sign(kpi.fDHi)}°C`,  sub:"fcst vs actual", deltaColor:dHiColor },
+      { label:"ACTUAL",   value:`${kpi.fActHi}°C`,     sub:actRange },
+      { label:"FORECAST", value:`${kpi.fFcstHi}°C`,    sub:fcstRange, forecast:true },
+      { label:"Δ",        value:`${sign(kpi.fDHi)}°C`, sub:"fcst vs actual", deltaColor:dHiColor },
     ]},
     { label:"LOW", color:C.low, cards:[
-      { label:"ACTUAL",   value:`${kpi.fActLo}°C`,      sub:actRange  },
-      { label:"FORECAST", value:`${kpi.fFcstLo}°C`,     sub:fcstRange },
-      { label:"Δ",        value:`${sign(kpi.fDLo)}°C`,  sub:"fcst vs actual", deltaColor:dLoColor },
+      { label:"ACTUAL",   value:`${kpi.fActLo}°C`,     sub:actRange },
+      { label:"FORECAST", value:`${kpi.fFcstLo}°C`,    sub:fcstRange, forecast:true },
+      { label:"Δ",        value:`${sign(kpi.fDLo)}°C`, sub:"fcst vs actual", deltaColor:dLoColor },
     ]},
   ]);
 
   // Build chart data — all 14 days, split by actual vs forecast
-  const allDays = weatherData[ids[0]].trend.map(d=>d.day);
+  const allDays    = weatherData[ids[0]].trend.map(d=>d.day);
   const hiActual   = allDays.map((_,i)=>{ const s=weatherData[ids[0]].trend[i]; return s.type==="actual"   ? avgR(ids.map(id=>weatherData[id].trend[i].hi)) : null; });
   const loActual   = allDays.map((_,i)=>{ const s=weatherData[ids[0]].trend[i]; return s.type==="actual"   ? avgR(ids.map(id=>weatherData[id].trend[i].lo)) : null; });
   const hiForecast = allDays.map((_,i)=>{ const s=weatherData[ids[0]].trend[i]; return s.type==="forecast" ? avgR(ids.map(id=>weatherData[id].trend[i].hi)) : null; });
@@ -460,6 +523,7 @@ function renderYoY() {
 
   renderKpis([
     { label:"HIGH", color:C.high, cards:[
+      // Fix 7: current year first — matches natural "new vs old" reading order
       { label:String(tyYear), value:`${kpi.yHiTy}°C`, sub:actRange },
       { label:String(lyYear), value:`${kpi.yHiLy}°C`, sub:actRange },
       { label:"Δ", value:`${sign(kpi.yDHi)}°C`, sub:`${tyYear} vs ${lyYear}`, deltaColor:dHiColor },
@@ -471,11 +535,11 @@ function renderYoY() {
     ]},
   ]);
 
-  const days  = weatherData[ids[0]].yoy.thisYear.map(d=>d.day);
-  const tyHi  = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.thisYear[i].hi)));
-  const tyLo  = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.thisYear[i].lo)));
-  const lyHi  = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.lastYear[i]?.hi ?? 0)));
-  const lyLo  = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.lastYear[i]?.lo ?? 0)));
+  const days = weatherData[ids[0]].yoy.thisYear.map(d=>d.day);
+  const tyHi = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.thisYear[i].hi)));
+  const tyLo = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.thisYear[i].lo)));
+  const lyHi = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.lastYear[i]?.hi ?? 0)));
+  const lyLo = days.map((_,i) => avgR(ids.map(id=>weatherData[id].yoy.lastYear[i]?.lo ?? 0)));
 
   const scopeLabel = currentSelector==="avg" ? "REGIONAL AVG" : currentSelector.toUpperCase();
   renderChart(days, [
@@ -489,10 +553,8 @@ function renderYoY() {
   document.getElementById("source-text").innerHTML = `<strong>SOURCE</strong>Open-Meteo forecast API (past_days) for current year; archive API for ${lyYear}. Location: ${loc}. Period: last 7 days vs same 7 days in ${lyYear}.`;
 }
 
-
 // ─── Render Summary tab ────────────────────────────────────────────────────────
 function renderSummary() {
-  // Hide chart-based dashboard, show summary panel
   document.getElementById("dashboard").style.display      = "none";
   document.getElementById("summary-panel").style.display  = "block";
 
@@ -502,13 +564,12 @@ function renderSummary() {
   const tyYear = past7Start.getFullYear();
   const lyYear = ly25Start.getFullYear();
 
-  // Build per-city stats
   function cityStats(id) {
     const d = weatherData[id];
-    const lyHis  = d.yoy.lastYear.map(x=>x.hi),  lyLos  = d.yoy.lastYear.map(x=>x.lo);
-    const tyHis  = d.yoy.thisYear.map(x=>x.hi),  tyLos  = d.yoy.thisYear.map(x=>x.lo);
-    const fcHis  = d.trend.filter(x=>x.type==="forecast").map(x=>x.hi);
-    const fcLos  = d.trend.filter(x=>x.type==="forecast").map(x=>x.lo);
+    const lyHis = d.yoy.lastYear.map(x=>x.hi), lyLos = d.yoy.lastYear.map(x=>x.lo);
+    const tyHis = d.yoy.thisYear.map(x=>x.hi), tyLos = d.yoy.thisYear.map(x=>x.lo);
+    const fcHis = d.trend.filter(x=>x.type==="forecast").map(x=>x.hi);
+    const fcLos = d.trend.filter(x=>x.type==="forecast").map(x=>x.lo);
     const lyHi=avgR(lyHis), tyHi=avgR(tyHis), fcHi=avgR(fcHis);
     const lyLo=avgR(lyLos), tyLo=avgR(tyLos), fcLo=avgR(fcLos);
     return {
@@ -521,7 +582,6 @@ function renderSummary() {
 
   const rows = CITIES.map(c => ({ ...c, s: cityStats(c.id) }));
 
-  // Avg row
   function avgStat(key) { return avgR(rows.map(r=>r.s[key])); }
   const avgRow = {
     hiLY: avgStat("hiLY"), hiTY: avgStat("hiTY"), hiFc: avgStat("hiFc"),
@@ -534,14 +594,13 @@ function renderSummary() {
 
   function dc(v) {
     const n = parseFloat(v);
-    if (n > 0)  return `<span class="delta-warm">+${v}°</span>`;
-    if (n < 0)  return `<span class="delta-cool">${v}°</span>`;
+    if (n > 0) return `<span class="delta-warm">+${v}°</span>`;
+    if (n < 0) return `<span class="delta-cool">${v}°</span>`;
     return `<span class="delta-zero">${v}°</span>`;
   }
   function temp(v) { return `${v}°C`; }
 
-  function tableRow(label, s, isAvg=false) {
-    const style = isAvg ? "" : "";
+  function tableRow(label, s) {
     return `<tr>
       <td>${label}</td>
       <td>${temp(s.hiLY)}</td><td>${temp(s.hiTY)}</td><td>${dc(s.dHiYoY)}</td>
@@ -551,21 +610,22 @@ function renderSummary() {
     </tr>`;
   }
 
+  // Fix 7: current year listed first in table headers too
   const html = `
     <div class="summary-wrap">
       <table class="summary-table">
         <thead>
           <tr>
-            <th rowspan="2" style="text-align:left; border-right:1px solid #E2DDD6">CITY</th>
-            <th colspan="5" style="border-bottom:none; border-right:1px solid #E2DDD6; color:#C0392B; letter-spacing:.1em">HIGH TEMP</th>
-            <th colspan="5" style="border-bottom:none; color:#1A5276; letter-spacing:.1em">LOW TEMP</th>
+            <th rowspan="2" style="text-align:left; border-right:1px solid #5A5450">CITY</th>
+            <th colspan="5" style="border-bottom:none; border-right:1px solid #5A5450; color:#E8887A; letter-spacing:.1em">HIGH TEMP</th>
+            <th colspan="5" style="border-bottom:none; color:#7AABE8; letter-spacing:.1em">LOW TEMP</th>
           </tr>
           <tr>
             <th>${lyYear} avg</th>
             <th>${tyYear} avg</th>
             <th>Δ YoY</th>
             <th>Forecast avg</th>
-            <th style="border-right:1px solid #E2DDD6">Δ Fcst</th>
+            <th style="border-right:1px solid #5A5450">Δ Fcst</th>
             <th>${lyYear} avg</th>
             <th>${tyYear} avg</th>
             <th>Δ YoY</th>
@@ -575,12 +635,12 @@ function renderSummary() {
         </thead>
         <tbody>
           ${rows.map(r => tableRow(`<span class="city-flag">${r.flag}</span>${r.label}`, r.s)).join("")}
-          ${tableRow("Avg", avgRow, true)}
+          ${tableRow("Avg", avgRow)}
         </tbody>
       </table>
     </div>
     <div class="source">
-      <strong>SOURCE</strong>Open-Meteo forecast API (past_days) for actuals & forecast; archive API for ${lyYear} YoY data.
+      <strong>SOURCE</strong>Open-Meteo forecast API (past_days) for actuals &amp; forecast; archive API for ${lyYear} YoY data.
       Last 7d actuals: ${actRange}. Forecast: ${fcstRange}.
       YoY comparison: same 7 days in ${lyYear}. All values are 7-day averages in °C.
     </div>
@@ -591,11 +651,9 @@ function renderSummary() {
 // ─── Routing ───────────────────────────────────────────────────────────────────
 function render() {
   if (!weatherData) return;
-  // Show/hide the right panels
   const isSum = currentTab === "summary";
   document.getElementById("dashboard").style.display     = isSum ? "none" : "block";
   document.getElementById("summary-panel").style.display = isSum ? "block" : "none";
-  // Hide/show city pills on summary (it shows all cities)
   document.getElementById("pills").style.visibility = isSum ? "hidden" : "visible";
   if (currentTab === "forecast") renderForecast();
   else if (currentTab === "yoy") renderYoY();
@@ -625,15 +683,17 @@ function switchSelector(sel) {
     const lyYear = ly25Start.getFullYear();
     document.getElementById("date-sub").textContent =
       `${dayLabel(fmt(past7Start))} – ${dayLabel(fmt(past7End))} + 7-day forecast · vs. ${lyYear}`;
-    document.getElementById("yoy-tab-btn").textContent = `${lyYear} vs ${tyYear}`;
+    // Fix 7: tab label reads "2026 vs 2025" (current year first)
+    document.getElementById("yoy-tab-btn").textContent = `${tyYear} vs ${lyYear}`;
     document.getElementById("spinner").style.display   = "none";
     document.getElementById("dashboard").style.display = "block";
     render();
   } catch(e) {
-    document.getElementById("spinner").style.display  = "none";
+    document.getElementById("spinner").style.display = "none";
     const err = document.getElementById("error-msg");
     err.style.display = "block";
-    err.textContent   = `Failed to load weather data: ${e.message}`;
+    // Fix 8: include a retry button so users aren't stuck on a transient failure
+    err.innerHTML = `<div>Failed to load weather data: ${e.message}</div><button class="retry-btn" onclick="location.reload()">↺ Retry</button>`;
   }
 })();
 </script>
