@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Weather Dashboard · Berlin · Amsterdam · Copenhagen</title>
+  <meta name="description" content="7-day temperature dashboard for Berlin, Amsterdam and Copenhagen — actuals, forecast, and year-on-year comparison." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌤</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
@@ -114,20 +116,24 @@
     }
     .source strong { letter-spacing: .08em; margin-right: 4px; }
 
-    /* ── Spinner ── */
+    /* ── Spinner / Skeleton ── */
     #spinner {
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 60px 0; gap: 16px;
+      padding: 20px 0; gap: 0;
     }
-    .spin-ring {
-      width: 32px; height: 32px;
-      border: 3px solid #E2DDD6; border-top-color: #C0392B;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .skeleton-kpi {
+      height: 88px; border-radius: 10px; margin-bottom: 10px;
+      background: linear-gradient(90deg, #EDE9E3 25%, #F7F5F0 50%, #EDE9E3 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-label { font-size: 13px; color: #A39E99; }
+    .skeleton-chart {
+      height: 300px; border-radius: 10px;
+      background: linear-gradient(90deg, #EDE9E3 25%, #F7F5F0 50%, #EDE9E3 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
 
     /* ── Summary table ── */
     .summary-wrap {
@@ -159,7 +165,7 @@
     }
     /* Keep serif font for city names only */
     .summary-table td:first-child { text-align: left; font-size: 14px; font-family: 'DM Serif Display', serif; }
-    .summary-table tr:last-child td { border-bottom: none; font-weight: 600; background: #F7F5F0; }
+    .summary-table tr:last-child td { border-bottom: none; font-weight: 600; background: #F7F5F0; border-top: 2px solid #E2DDD6; }
     .summary-table .section-header td {
       background: #F7F5F0; font-size: 10px; letter-spacing: .1em;
       color: #A39E99; padding: 8px 16px; border-bottom: 1px solid #E2DDD6;
@@ -223,7 +229,11 @@
 </div>
 
 <div id="content">
-  <div id="spinner"><div class="spin-ring"></div><div class="spin-label">Fetching live weather data…</div></div>
+  <div id="spinner">
+    <div class="skeleton-kpi"></div>
+    <div class="skeleton-kpi"></div>
+    <div class="skeleton-chart"></div>
+  </div>
   <div id="error-msg" style="display:none"></div>
   <div id="summary-panel" style="display:none"></div>
   <div id="dashboard" style="display:none">
@@ -383,8 +393,15 @@ function renderKpis(rows) {
 
 // ─── Chart rendering ───────────────────────────────────────────────────────────
 function renderChart(labels, datasets, titleText, todayLabel) {
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   document.getElementById("chart-title").textContent = titleText;
+
+  if (chartInstance) {
+    chartInstance._todayLabel = todayLabel;
+    chartInstance.data.labels = labels;
+    chartInstance.data.datasets = datasets;
+    chartInstance.update('none');
+    return;
+  }
 
   const ctx = document.getElementById("main-chart").getContext("2d");
 
@@ -392,13 +409,14 @@ function renderChart(labels, datasets, titleText, todayLabel) {
   const todayLinePlugin = {
     id: "todayLine",
     afterDraw(chart) {
-      if (!todayLabel) return;
-      const idx = chart.data.labels.indexOf(todayLabel);
+      const tl = chart._todayLabel;
+      if (!tl) return;
+      const idx = chart.data.labels.indexOf(tl);
       if (idx < 0) return;
       const meta = chart.getDatasetMeta(0);
       if (!meta.data[idx]) return;
       const x = meta.data[idx].x;
-      const { top, bottom } = chart.chartArea;
+      const { top, bottom, right } = chart.chartArea;
       const ctx2 = chart.ctx;
       ctx2.save();
       // Vertical line — more visible
@@ -411,7 +429,8 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       const label = "TODAY";
       ctx2.font = "bold 10px system-ui, -apple-system, sans-serif";
       const tw = ctx2.measureText(label).width;
-      const bx = x + 6, by = top + 4, bw = tw + 10, bh = 16;
+      const bw = tw + 10, bh = 16;
+      const bx = Math.min(x + 6, right - bw - 2), by = top + 4;
       ctx2.fillStyle = "#6B6560";
       ctx2.beginPath();
       ctx2.roundRect(bx, by, bw, bh, 3);
@@ -466,6 +485,7 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       elements: { point:{ radius:4, hoverRadius:6 }, line:{ tension:0.3 } },
     },
   });
+  chartInstance._todayLabel = todayLabel;
 }
 
 // ─── Render forecast tab ────────────────────────────────────────────────────────
@@ -482,12 +502,12 @@ function renderForecast() {
     { label:"HIGH", color:C.high, cards:[
       { label:"ACTUAL",   value:`${kpi.fActHi}°C`,     sub:actRange },
       { label:"FORECAST", value:`${kpi.fFcstHi}°C`,    sub:fcstRange, forecast:true },
-      { label:"Δ",        value:`${sign(kpi.fDHi)}°C`, sub:"fcst vs actual", deltaColor:dHiColor },
+      { label:"Δ",        value:`${sign(kpi.fDHi)}°`, sub:"fcst vs actual", deltaColor:dHiColor },
     ]},
     { label:"LOW", color:C.low, cards:[
       { label:"ACTUAL",   value:`${kpi.fActLo}°C`,     sub:actRange },
       { label:"FORECAST", value:`${kpi.fFcstLo}°C`,    sub:fcstRange, forecast:true },
-      { label:"Δ",        value:`${sign(kpi.fDLo)}°C`, sub:"fcst vs actual", deltaColor:dLoColor },
+      { label:"Δ",        value:`${sign(kpi.fDLo)}°`, sub:"fcst vs actual", deltaColor:dLoColor },
     ]},
   ]);
 
@@ -526,12 +546,12 @@ function renderYoY() {
       // Fix 7: current year first — matches natural "new vs old" reading order
       { label:String(tyYear), value:`${kpi.yHiTy}°C`, sub:actRange },
       { label:String(lyYear), value:`${kpi.yHiLy}°C`, sub:actRange },
-      { label:"Δ", value:`${sign(kpi.yDHi)}°C`, sub:`${tyYear} vs ${lyYear}`, deltaColor:dHiColor },
+      { label:"Δ", value:`${sign(kpi.yDHi)}°`, sub:`${tyYear} vs ${lyYear}`, deltaColor:dHiColor },
     ]},
     { label:"LOW", color:C.low, cards:[
       { label:String(tyYear), value:`${kpi.yLoTy}°C`, sub:actRange },
       { label:String(lyYear), value:`${kpi.yLoLy}°C`, sub:actRange },
-      { label:"Δ", value:`${sign(kpi.yDLo)}°C`, sub:`${tyYear} vs ${lyYear}`, deltaColor:dLoColor },
+      { label:"Δ", value:`${sign(kpi.yDLo)}°`, sub:`${tyYear} vs ${lyYear}`, deltaColor:dLoColor },
     ]},
   ]);
 
@@ -654,7 +674,6 @@ function render() {
   const isSum = currentTab === "summary";
   document.getElementById("dashboard").style.display     = isSum ? "none" : "block";
   document.getElementById("summary-panel").style.display = isSum ? "block" : "none";
-  document.getElementById("pills").style.visibility = isSum ? "hidden" : "visible";
   if (currentTab === "forecast") renderForecast();
   else if (currentTab === "yoy") renderYoY();
   else renderSummary();
@@ -675,9 +694,47 @@ function switchSelector(sel) {
 }
 
 // ─── Boot ──────────────────────────────────────────────────────────────────────
+const WX_CACHE_KEY = "wx_cache";
+const WX_CACHE_TTL = 30 * 60 * 1000; // 30 minutes in ms
+
+function readCache() {
+  try {
+    const raw = localStorage.getItem(WX_CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (!cached || !cached.ts || !cached.data || !cached.dateStrs) return null;
+    if (Date.now() - cached.ts > WX_CACHE_TTL) return null;
+    return cached;
+  } catch(e) {
+    return null;
+  }
+}
+
+function writeCache(data, dateStrs) {
+  try {
+    localStorage.setItem(WX_CACHE_KEY, JSON.stringify({ ts: Date.now(), data, dateStrs }));
+  } catch(e) {
+    // storage full or unavailable — ignore
+  }
+}
+
 (async function boot() {
   try {
-    weatherData = await loadAllData();
+    const cached = readCache();
+    if (cached) {
+      weatherData = cached.data;
+      dates = buildDates();
+    } else {
+      weatherData = await loadAllData();
+      const { past7Start, past7End, fcst7End, ly25Start, today } = dates;
+      writeCache(weatherData, {
+        past7Start: fmt(past7Start),
+        past7End:   fmt(past7End),
+        fcst7End:   fmt(fcst7End),
+        ly25Start:  fmt(ly25Start),
+        today:      fmt(today),
+      });
+    }
     const { past7Start, past7End, fcst7End, ly25Start } = dates;
     const tyYear = past7Start.getFullYear();
     const lyYear = ly25Start.getFullYear();
