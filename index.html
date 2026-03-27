@@ -682,6 +682,7 @@ function render() {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab===tab));
+  document.getElementById("pills").style.display = tab === "summary" ? "none" : "flex";
   render();
 }
 
@@ -744,6 +745,7 @@ function writeCache(data, dateStrs) {
     document.getElementById("yoy-tab-btn").textContent = `${tyYear} vs ${lyYear}`;
     document.getElementById("spinner").style.display   = "none";
     document.getElementById("dashboard").style.display = "block";
+    document.getElementById("pills").style.display = "none";
     render();
   } catch(e) {
     document.getElementById("spinner").style.display = "none";
