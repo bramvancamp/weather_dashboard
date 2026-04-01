@@ -9,57 +9,90 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
-    /* Fix 3: responsive horizontal padding via custom property */
-    :root { --px: clamp(16px, 5vw, 40px); }
+    :root {
+      --px: clamp(16px, 5vw, 40px);
+
+      /* Backgrounds */
+      --color-bg:             #F8F9FA;
+      --color-surface:        #FFFFFF;
+      --color-surface-subtle: #F3F4F6;
+
+      /* Text */
+      --color-text-primary:   #111827;
+      --color-text-secondary: #6B7280;
+      --color-text-muted:     #9CA3AF;
+
+      /* Borders */
+      --color-border:        #E5E7EB;
+      --color-border-subtle: #F3F4F6;
+
+      /* Temperature */
+      --color-temp-high:     #DC2626;
+      --color-temp-low:      #2563EB;
+      --color-delta-warm:    #EA580C;
+      --color-delta-cool:    #0891B2;
+      --color-delta-neutral: #9CA3AF;
+
+      /* Cities */
+      --color-city-avg:        #374151;
+      --color-city-berlin:     #DC2626;
+      --color-city-amsterdam:  #2563EB;
+      --color-city-copenhagen: #059669;
+
+      /* Data table */
+      --color-table-header:     #1E3A5F;
+      --color-table-border:     #2D5A8E;
+      --color-table-high-label: #FCA5A5;
+      --color-table-low-label:  #93C5FD;
+    }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #F7F5F0;
+      background: var(--color-bg);
       font-family: 'DM Serif Display', Georgia, serif;
-      color: #1A1714;
+      color: var(--color-text-primary);
       min-height: 100vh;
     }
     button { font-family: inherit; cursor: pointer; }
 
     /* ── Layout ── */
     #header {
-      background: #fff;
-      border-bottom: 1px solid #E2DDD6;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
       padding: 20px var(--px) 0;
       position: sticky; top: 0; z-index: 10;
     }
     #header h1 { font-size: clamp(18px, 3.5vw, 28px); font-weight: 400; margin: 0; }
-    #header .sub { font-size: 12px; color: #6B6560; margin-top: 4px; }
-    #header .eyebrow { font-size: 11px; letter-spacing: .18em; color: #A39E99; margin-bottom: 5px; }
+    #header .sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+    #header .eyebrow { font-size: 11px; letter-spacing: .18em; color: var(--color-text-muted); margin-bottom: 5px; }
 
     /* ── Tab bar ── */
-    /* Fix 1: flex-wrap so pills fall to a second row on mobile */
     #tabbar {
       display: flex; align-items: stretch; flex-wrap: wrap;
-      border-bottom: 1px solid #E2DDD6;
+      border-bottom: 1px solid var(--color-border);
       margin-top: 12px;
     }
     .tab-btn {
       padding: 10px 20px; border: none; background: transparent;
-      font-size: 14px; color: #A39E99;
+      font-size: 14px; color: var(--color-text-muted);
       border-bottom: 2px solid transparent;
       transition: all .15s; margin-bottom: -1px;
       white-space: nowrap;
     }
-    .tab-btn.active { color: #1A1714; border-bottom-color: #1A1714; }
+    .tab-btn.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); }
     #tabbar .spacer { flex: 1; }
 
     /* ── Selector pills ── */
     #pills { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; flex-wrap: wrap; }
     .pill {
       padding: 5px 14px; border-radius: 20px; font-size: 12px;
-      border: 1px solid #E2DDD6; background: transparent; color: #6B6560;
+      border: 1px solid var(--color-border); background: transparent; color: var(--color-text-secondary);
       transition: all .15s; white-space: nowrap;
     }
-    .pill.active-avg       { background:#1A1714; color:#F7F5F0; border-color:#1A1714; }
-    .pill.active-berlin    { background:#C0392B; color:#fff; border-color:#C0392B; }
-    .pill.active-amsterdam { background:#1A5276; color:#fff; border-color:#1A5276; }
-    .pill.active-copenhagen{ background:#117A65; color:#fff; border-color:#117A65; }
+    .pill.active-avg       { background: var(--color-city-avg);        color: #fff; border-color: var(--color-city-avg); }
+    .pill.active-berlin    { background: var(--color-city-berlin);     color: #fff; border-color: var(--color-city-berlin); }
+    .pill.active-amsterdam { background: var(--color-city-amsterdam);  color: #fff; border-color: var(--color-city-amsterdam); }
+    .pill.active-copenhagen{ background: var(--color-city-copenhagen); color: #fff; border-color: var(--color-city-copenhagen); }
 
     /* ── Content ── */
     #content { padding: 20px var(--px) 48px; }
@@ -68,12 +101,12 @@
     .kpi-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
     .kpi-row {
       display: flex; align-items: stretch;
-      border: 1px solid #E2DDD6; border-radius: 10px;
-      overflow: hidden; background: #fff;
+      border: 1px solid var(--color-border); border-radius: 10px;
+      overflow: hidden; background: var(--color-surface);
     }
     .kpi-row-label {
       width: 52px; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; border-right: 1px solid #E2DDD6;
+      flex-shrink: 0; border-right: 1px solid var(--color-border);
     }
     .kpi-row-label span {
       font-size: 10px; letter-spacing: .14em;
@@ -82,35 +115,32 @@
     }
     .kpi-card {
       flex: 1; padding: 14px 18px;
-      border-right: 1px solid #E2DDD6;
+      border-right: 1px solid var(--color-border);
     }
     .kpi-card:last-child { border-right: none; }
     .kpi-forecast {
-      background: #FAFAF8;
+      background: var(--color-surface-subtle);
     }
-    /* Fix 4: labels slightly larger and darker for readability */
-    .kpi-label { font-size: 11px; color: #6B6560; letter-spacing: .12em; margin-bottom: 6px; }
-    /* Fix 10: system sans-serif for numeric KPI values — much more scannable */
+    .kpi-label { font-size: 11px; color: var(--color-text-secondary); letter-spacing: .12em; margin-bottom: 6px; }
     .kpi-value {
       font-size: 26px; font-weight: 400; line-height: 1.1;
       font-family: system-ui, -apple-system, sans-serif;
     }
-    /* Fix 4: sub bumped from 10px to 12px and darkened */
-    .kpi-sub { font-size: 12px; color: #6B6560; margin-top: 5px; }
+    .kpi-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 5px; }
 
     /* ── Chart card ── */
     .chart-card {
-      background: #fff; border-radius: 10px; border: 1px solid #E2DDD6;
+      background: var(--color-surface); border-radius: 10px; border: 1px solid var(--color-border);
       padding: 20px 20px 16px; margin-top: 16px;
     }
-    .chart-title { font-size: 11px; color: #A39E99; letter-spacing: .12em; margin-bottom: 12px; }
+    .chart-title { font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; margin-bottom: 12px; }
     .chart-wrap  { position: relative; height: 300px; }
 
     /* ── Source ── */
     .source {
       margin-top: 20px; padding-top: 14px;
-      border-top: 1px solid #EDE9E3;
-      font-size: 11px; color: #A39E99; line-height: 1.8;
+      border-top: 1px solid var(--color-border-subtle);
+      font-size: 11px; color: var(--color-text-muted); line-height: 1.8;
     }
     .source strong { letter-spacing: .08em; margin-right: 4px; }
 
@@ -122,21 +152,20 @@
     @keyframes shimmer { to { background-position: -200% 0; } }
     .skeleton-kpi {
       height: 88px; border-radius: 10px; margin-bottom: 10px;
-      background: linear-gradient(90deg, #EDE9E3 25%, #F7F5F0 50%, #EDE9E3 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-subtle) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
     }
     .skeleton-chart {
       height: 300px; border-radius: 10px;
-      background: linear-gradient(90deg, #EDE9E3 25%, #F7F5F0 50%, #EDE9E3 75%);
+      background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-subtle) 50%, var(--color-border) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.4s infinite;
     }
 
     /* ── Summary table ── */
     .summary-wrap {
-      background: #fff; border-radius: 10px; border: 1px solid #E2DDD6;
-      /* Fix 2: horizontal scroll instead of clipping on mobile */
+      background: var(--color-surface); border-radius: 10px; border: 1px solid var(--color-border);
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       margin-bottom: 16px;
@@ -144,62 +173,58 @@
     .summary-table {
       width: 100%; border-collapse: collapse;
       font-size: 13px;
-      /* Fix 10: system sans-serif for table data */
       font-family: system-ui, -apple-system, sans-serif;
     }
     .summary-table th {
       padding: 10px 16px; text-align: right;
       font-size: 11px; letter-spacing: .1em; color: #fff;
-      background: #1A3A28;
-      border-bottom: 1px solid #1A3A28;
+      background: var(--color-table-header);
+      border-bottom: 1px solid var(--color-table-header);
       font-weight: 500; white-space: nowrap;
     }
     .summary-table th:first-child { text-align: left; }
     .summary-table td {
       padding: 13px 16px; text-align: right;
-      border-bottom: 1px solid #EDE9E3;
-      color: #1A1714; white-space: nowrap;
+      border-bottom: 1px solid var(--color-border-subtle);
+      color: var(--color-text-primary); white-space: nowrap;
       font-size: 14px;
     }
     /* Keep serif font for city names only */
     .summary-table td:first-child { text-align: left; font-size: 14px; font-family: 'DM Serif Display', serif; }
-    .summary-table tr:last-child td { border-bottom: none; font-weight: 600; background: #F7F5F0; border-top: 2px solid #E2DDD6; }
+    .summary-table tr:last-child td { border-bottom: none; font-weight: 600; background: var(--color-bg); border-top: 2px solid var(--color-border); }
     .summary-table .section-header td {
-      background: #F7F5F0; font-size: 10px; letter-spacing: .1em;
-      color: #A39E99; padding: 8px 16px; border-bottom: 1px solid #E2DDD6;
+      background: var(--color-bg); font-size: 10px; letter-spacing: .1em;
+      color: var(--color-text-muted); padding: 8px 16px; border-bottom: 1px solid var(--color-border);
       text-align: left;
     }
-    .delta-warm { color: #B03A2E; }
-    .delta-cool { color: #1A5276; }
-    .delta-zero { color: #A39E99; }
+    .delta-warm { color: var(--color-delta-warm); }
+    .delta-cool { color: var(--color-delta-cool); }
+    .delta-zero { color: var(--color-delta-neutral); }
     .city-flag  { margin-right: 6px; }
 
-    /* ── Error — Fix 8: retry button ── */
-    #error-msg { padding: 40px; color: #B03A2E; font-size: 13px; text-align: center; }
+    /* ── Error ── */
+    #error-msg { padding: 40px; color: var(--color-delta-warm); font-size: 13px; text-align: center; }
     .retry-btn {
       display: inline-block; margin-top: 16px; padding: 9px 22px;
-      border: 1px solid #C0392B; background: transparent;
-      color: #C0392B; border-radius: 6px; font-family: inherit;
+      border: 1px solid var(--color-temp-high); background: transparent;
+      color: var(--color-temp-high); border-radius: 6px; font-family: inherit;
       font-size: 13px; cursor: pointer; transition: all .15s;
     }
-    .retry-btn:hover { background: #C0392B; color: #fff; }
+    .retry-btn:hover { background: var(--color-temp-high); color: #fff; }
 
     /* ── Mobile ── */
     @media (max-width: 640px) {
-      /* Fix 9: compact header — hide decorative eyebrow, tighten spacing */
       #header .eyebrow { display: none; }
       #header { padding-top: 12px; }
       #header .sub { font-size: 11px; }
-      /* Fix 1: pills drop to second row */
       #tabbar .spacer { display: none; }
       #pills {
         width: 100%;
         padding: 8px 0 10px;
-        border-top: 1px solid #EDE9E3;
+        border-top: 1px solid var(--color-border-subtle);
         order: 10;
       }
       .tab-btn { padding: 10px 12px; font-size: 13px; }
-      /* Shorter chart on mobile so it fits without scrolling */
       .chart-wrap { height: 220px; }
     }
   </style>
@@ -253,9 +278,9 @@ const CITIES = [
 ];
 
 const C = {
-  high:"#C0392B", low:"#1A5276",
-  warmer:"#B03A2E", cooler:"#1A5276",
-  muted:"#A39E99", border:"#E2DDD6",
+  high:   "#DC2626", low:    "#2563EB",
+  warmer: "#EA580C", cooler: "#0891B2",
+  muted:  "#9CA3AF", border: "#E5E7EB",
 };
 
 // ─── State ─────────────────────────────────────────────────────────────────────
@@ -419,7 +444,7 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       ctx2.save();
       // Vertical line — more visible
       ctx2.setLineDash([4, 4]);
-      ctx2.strokeStyle = "#9E9690";
+      ctx2.strokeStyle = "#9CA3AF";
       ctx2.lineWidth = 1.5;
       ctx2.beginPath(); ctx2.moveTo(x, top); ctx2.lineTo(x, bottom); ctx2.stroke();
       ctx2.setLineDash([]);
@@ -429,7 +454,7 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       const tw = ctx2.measureText(label).width;
       const bw = tw + 10, bh = 16;
       const bx = Math.min(x + 6, right - bw - 2), by = top + 4;
-      ctx2.fillStyle = "#6B6560";
+      ctx2.fillStyle = "#374151";
       ctx2.beginPath();
       ctx2.roundRect(bx, by, bw, bh, 3);
       ctx2.fill();
@@ -455,12 +480,12 @@ function renderChart(labels, datasets, titleText, todayLabel) {
         legend: {
           labels: {
             font:{ family: SANS, size:12 },
-            color:"#6B6560", boxWidth:24, boxHeight:2, useBorderRadius:true, borderRadius:1,
+            color:"#6B7280", boxWidth:24, boxHeight:2, useBorderRadius:true, borderRadius:1,
           }
         },
         tooltip: {
-          backgroundColor:"#fff", borderColor:"#E2DDD6", borderWidth:1,
-          titleColor:"#6B6560", bodyColor:"#1A1714",
+          backgroundColor:"#fff", borderColor:"#E5E7EB", borderWidth:1,
+          titleColor:"#6B7280", bodyColor:"#111827",
           titleFont:{ family: SANS, size:12 },
           bodyFont:{ family: SANS, size:13 },
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}°C` },
@@ -469,13 +494,13 @@ function renderChart(labels, datasets, titleText, todayLabel) {
       },
       scales: {
         x: {
-          grid:{ color:"#EDE9E3" },
-          ticks:{ font:{ family: SANS, size:11 }, color:"#A39E99" },
+          grid:{ color:"#F3F4F6" },
+          ticks:{ font:{ family: SANS, size:11 }, color:"#9CA3AF" },
           border:{ display:false },
         },
         y: {
-          grid:{ color:"#EDE9E3" },
-          ticks:{ font:{ family: SANS, size:11 }, color:"#A39E99",
+          grid:{ color:"#F3F4F6" },
+          ticks:{ font:{ family: SANS, size:11 }, color:"#9CA3AF",
                   callback: v => `${v}°` },
           border:{ display:false },
         },
@@ -634,16 +659,16 @@ function renderSummary() {
       <table class="summary-table">
         <thead>
           <tr>
-            <th rowspan="2" style="text-align:left; border-right:1px solid #2E5F40">CITY</th>
-            <th colspan="5" style="border-bottom:none; border-right:1px solid #2E5F40; color:#E8887A; letter-spacing:.1em">HIGH TEMP</th>
-            <th colspan="5" style="border-bottom:none; color:#7AABE8; letter-spacing:.1em">LOW TEMP</th>
+            <th rowspan="2" style="text-align:left; border-right:1px solid var(--color-table-border)">CITY</th>
+            <th colspan="5" style="border-bottom:none; border-right:1px solid var(--color-table-border); color:var(--color-table-high-label); letter-spacing:.1em">HIGH TEMP</th>
+            <th colspan="5" style="border-bottom:none; color:var(--color-table-low-label); letter-spacing:.1em">LOW TEMP</th>
           </tr>
           <tr>
             <th>${lyYear} avg</th>
             <th>${tyYear} avg</th>
             <th>Δ YoY</th>
             <th>Forecast avg</th>
-            <th style="border-right:1px solid #2E5F40">Δ Fcst</th>
+            <th style="border-right:1px solid var(--color-table-border)">Δ Fcst</th>
             <th>${lyYear} avg</th>
             <th>${tyYear} avg</th>
             <th>Δ YoY</th>
